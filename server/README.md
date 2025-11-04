@@ -22,3 +22,5 @@ Copier `.env.example` vers `.env.local` et ajuster :
 - `DATABASE_URL` : chemin SQLite (fichier `prisma/dev.db` par defaut).
 - `JWT_SECRET` : chaine secrete de 16 caracteres minimum.
 - `BOARD_GAME_API_*` : identifiants pour l'API externe (facultatif).
+- `BGG_API_TOKEN` (facultatif mais recommande): jeton Bearer pour l'API BGG XML v2. Si BGG l'exige sur votre environnement, renseignez-le et l'API ajoutera automatiquement `Authorization: Bearer <token>` aux appels BGG.
+- `BGG_COOKIE` (optionnel): cookies de session BGG pour aider au dev local si necessaire.

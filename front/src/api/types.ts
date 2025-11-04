@@ -14,6 +14,8 @@ export interface Game {
   averageDuration: number | null
   minPlayers: number | null
   maxPlayers: number | null
+  imageUrl?: string | null
+  yearPublished?: number | null
 }
 
 export interface SessionGame {

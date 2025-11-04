@@ -9,4 +9,10 @@ export class ParticipationController {
     const participation = await ParticipationService.respond(sessionId, req.currentUser!.id, status)
     res.json(participation)
   }
+
+  static async join(req: Request, res: Response) {
+    const sessionId = Number(req.params.sessionId)
+    const participation = await ParticipationService.join(sessionId, req.currentUser!.id)
+    res.json(participation)
+  }
 }

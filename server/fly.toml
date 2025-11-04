@@ -1,0 +1,36 @@
+# Fly.io configuration for the API (server)
+# Replace the app name below after running `fly launch` or from your dashboard
+
+app = "your-fly-app-name"
+primary_region = "cdg"
+
+[build]
+
+[env]
+# Node apps on Fly receive PORT from the platform; our app reads env.PORT
+
+[[services]]
+  internal_port = 8080
+  protocol = "tcp"
+
+  [services.concurrency]
+    type = "connections"
+    hard_limit = 50
+    soft_limit = 25
+
+  [[services.ports]]
+    handlers = ["http"]
+    port = 80
+
+  [[services.ports]]
+    handlers = ["tls", "http"]
+    port = 443
+
+  [services.http_checks]
+    interval = "10s"
+    method = "get"
+    path = "/api/health"
+    protocol = "http"
+    timeout = "2s"
+    tls_skip_verify = false
+

@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query"
 import { Link } from "react-router-dom"
-import { fetchSessions } from "../api/sessions"
+import { fetchSessions, fetchDiscoverSessions } from "../api/sessions"
 import { queryKeys } from "../store/queryKeys"
 import { SessionCard } from "../components/session/SessionCard"
 
@@ -8,6 +8,10 @@ export const DashboardPage = () => {
   const { data: sessions, isLoading } = useQuery({
     queryKey: queryKeys.sessions,
     queryFn: fetchSessions
+  })
+  const { data: discover } = useQuery({
+    queryKey: ["sessions", "discover"],
+    queryFn: fetchDiscoverSessions
   })
 
   return (
@@ -38,6 +42,17 @@ export const DashboardPage = () => {
             </Link>
           </div>
         </div>
+      )}
+
+      {discover && discover.length > 0 && (
+        <section>
+          <h2>Sessions disponibles</h2>
+          <div className="session-grid">
+            {discover.map((session) => (
+              <SessionCard key={`d-${session.id}`} session={session} />
+            ))}
+          </div>
+        </section>
       )}
     </div>
   )

@@ -33,3 +33,21 @@ export const recordResults = async (sessionId: number, payload: { sessionGameId:
   return data
 }
 
+export const respondParticipation = async (
+  sessionId: number,
+  status: 'ACCEPTED' | 'DECLINED'
+) => {
+  const { data } = await apiClient.post<{ id: number }>(`/api/participations/${sessionId}/respond`, { status })
+  return data
+}
+
+export const joinSession = async (sessionId: number) => {
+  const { data } = await apiClient.post<{ id: number }>(`/api/participations/${sessionId}/join`)
+  return data
+}
+
+export const fetchDiscoverSessions = async (): Promise<Session[]> => {
+  const { data } = await apiClient.get<Session[]>('/api/sessions/discover')
+  return data
+}
+

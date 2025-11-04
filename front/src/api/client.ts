@@ -10,8 +10,10 @@ const apiClient = axios.create({
 
 apiClient.interceptors.request.use((config) => {
   const token = localStorage.getItem(TOKEN_KEY)
-  if (token !== null && config.headers !== undefined) {
-    config.headers.Authorization = `Bearer ${token}`
+  if (token) {
+    // Ensure headers object exists
+    config.headers = config.headers ?? {}
+    ;(config.headers as any).Authorization = `Bearer ${token}`
   }
   return config
 })

@@ -5,7 +5,9 @@ const invitationStatus = z.enum(['PENDING', 'ACCEPTED', 'DECLINED'])
 
 export const createSessionSchema = z.object({
   title: z.string().min(3).max(255),
-  startDatetime: z.string().datetime(),
+  // Accepte la valeur issue d'un input type="datetime-local" (ex: 2025-11-03T14:30)
+  // La conversion vers Date est faite dans le service.
+  startDatetime: z.string().min(1),
   location: z.string().min(1).max(255),
   status: sessionStatus.optional(),
   games: z

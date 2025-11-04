@@ -7,6 +7,7 @@ const router = Router()
 router.use(authenticate)
 
 router.post('/:sessionId/respond', ParticipationController.respond)
+router.post('/:sessionId/join', ParticipationController.join)
 
 export default router
 

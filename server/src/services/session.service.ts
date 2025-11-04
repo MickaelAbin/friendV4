@@ -45,6 +45,28 @@ export class SessionService {
     })
   }
 
+  static async discover(userId: number) {
+    return prisma.session.findMany({
+      where: {
+        AND: [
+          { organizerId: { not: userId } },
+          { status: { in: ["PLANNED", "ONGOING"] as any } },
+          {
+            participations: {
+              none: { userId }
+            }
+          }
+        ]
+      },
+      include: {
+        organizer: true,
+        games: { include: { game: true } },
+        participations: { include: { user: true } }
+      },
+      orderBy: { startDatetime: "asc" }
+    })
+  }
+
   static async findById(sessionId: number, userId: number) {
     const session = await prisma.session.findUnique({
       where: { id: sessionId },
