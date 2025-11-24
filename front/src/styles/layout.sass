@@ -66,3 +66,29 @@
   font-size: 1.125rem
   color: rgba(17, 24, 39, 0.7)
 
+  color: rgba(17, 24, 39, 0.7)
+
+@media (max-width: 768px)
+  .layout
+    grid-template-columns: 1fr
+    display: flex
+    flex-direction: column
+
+  .sidebar
+    padding: 1rem
+    gap: 1rem
+
+  .nav
+    flex-direction: row
+    overflow-x: auto
+    padding-bottom: 0.5rem
+    -webkit-overflow-scrolling: touch
+
+  .nav-item
+    white-space: nowrap
+
+  .content
+    padding: 1rem
+
+  .sidebar-footer
+    display: none // Hide footer on mobile to save space, or move it elsewhere
