@@ -1,7 +1,7 @@
 import type { Request, Response, NextFunction } from 'express'
 import { StatusCodes } from 'http-status-codes'
-import { prisma } from '../utils/prisma'
-import { verifyToken } from '../utils/jwt'
+import { prisma } from '../utils/prisma.js'
+import { verifyToken } from '../utils/jwt.js'
 
 export const authenticate = async (req: Request, res: Response, next: NextFunction) => {
   const authHeader = req.headers.authorization

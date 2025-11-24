@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express'
-import { ParticipationService } from '../services/participation.service'
-import { respondParticipationSchema } from '../validators/session.validators'
+import { ParticipationService } from '../services/participation.service.js'
+import { respondParticipationSchema } from '../validators/session.validators.js'
 
 export class ParticipationController {
   static async respond(req: Request, res: Response) {

@@ -1,7 +1,7 @@
 import type { Request, Response } from 'express'
 import { StatusCodes } from 'http-status-codes'
-import { SessionService } from '../services/session.service'
-import { createSessionSchema, updateSessionSchema, recordResultsSchema } from '../validators/session.validators'
+import { SessionService } from '../services/session.service.js'
+import { createSessionSchema, updateSessionSchema, recordResultsSchema } from '../validators/session.validators.js'
 
 export class SessionController {
   private static normalize(session: any) {

@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express'
-import { AuthService } from '../services/auth.service'
-import { registerSchema, loginSchema } from '../validators/auth.validators'
+import { AuthService } from '../services/auth.service.js'
+import { registerSchema, loginSchema } from '../validators/auth.validators.js'
 import { StatusCodes } from 'http-status-codes'
 
 export class AuthController {

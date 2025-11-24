@@ -1,6 +1,6 @@
 import { Router } from 'express'
-import { authenticate } from '../middlewares/authenticate'
-import { ParticipationController } from '../controllers/participation.controller'
+import { authenticate } from '../middlewares/authenticate.js'
+import { ParticipationController } from '../controllers/participation.controller.js'
 
 const router = Router()
 

@@ -1,7 +1,7 @@
 import { StatusCodes } from "http-status-codes"
 import type { NextFunction, Request, Response } from "express"
 import { ZodError } from "zod"
-import { AppError } from "../utils/appError"
+import { AppError } from "../utils/appError.js"
 
 export const errorHandler = (err: unknown, _req: Request, res: Response, _next: NextFunction) => {
   if (err instanceof ZodError) {

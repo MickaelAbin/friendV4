@@ -1,6 +1,6 @@
 import type { Request, Response } from "express"
 import { StatusCodes } from "http-status-codes"
-import { GameService } from "../services/game.service"
+import { GameService } from "../services/game.service.js"
 import multer from 'multer'
 import path from 'node:path'
 import fs from 'node:fs/promises'

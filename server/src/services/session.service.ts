@@ -1,6 +1,6 @@
 import { StatusCodes } from "http-status-codes"
-import { prisma } from "../utils/prisma"
-import { AppError } from "../utils/appError"
+import { prisma } from "../utils/prisma.js"
+import { AppError } from "../utils/appError.js"
 import type { InvitationStatus, SessionStatus } from "@prisma/client"
 
 interface CreateSessionInput {

@@ -1,7 +1,7 @@
 import axios from 'axios'
 import { XMLParser } from 'fast-xml-parser'
-import { prisma } from '../utils/prisma'
-import { env } from '../config/env'
+import { prisma } from '../utils/prisma.js'
+import { env } from '../config/env.js'
 
 // Basic compliance helpers for BGG XML API usage
 // - Respect ~5s between external calls
@@ -9,16 +9,18 @@ import { env } from '../config/env'
 let lastExternalCall = 0
 const MIN_INTERVAL_MS = Number.isFinite(env.BGG_MIN_INTERVAL_MS ?? NaN) ? (env.BGG_MIN_INTERVAL_MS as number) : 5000
 const CACHE_TTL_MS = 15 * 60 * 1000 // 15 minutes
-const searchCache = new Map<string, { at: number; items: Array<{
-  name: string
-  externalId: string
-  apiSource: string
-  minPlayers: number | null
-  maxPlayers: number | null
-  averageDuration: number | null
-  thumbnailUrl?: string
-  yearPublished?: number | null
-}> }>()
+const searchCache = new Map<string, {
+  at: number; items: Array<{
+    name: string
+    externalId: string
+    apiSource: string
+    minPlayers: number | null
+    maxPlayers: number | null
+    averageDuration: number | null
+    thumbnailUrl?: string
+    yearPublished?: number | null
+  }>
+}>()
 
 const waitBetweenCalls = async () => {
   const now = Date.now()
@@ -122,7 +124,7 @@ export class GameService {
             try {
               const parsed = parser.parse(res.data)
               if (parsed && parsed.items) return parsed
-            } catch {}
+            } catch { }
           }
           if (res.status === 401 || res.status === 403) {
             console.warn('BGG API unauthorized/forbidden. Configure BGG_API_TOKEN or check permissions.')

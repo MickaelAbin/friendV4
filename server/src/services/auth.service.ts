@@ -1,8 +1,8 @@
 import { StatusCodes } from "http-status-codes"
-import { prisma } from "../utils/prisma"
-import { hashPassword, comparePassword } from "../utils/password"
-import { AppError } from "../utils/appError"
-import { signToken } from "../utils/jwt"
+import { prisma } from "../utils/prisma.js"
+import { hashPassword, comparePassword } from "../utils/password.js"
+import { AppError } from "../utils/appError.js"
+import { signToken } from "../utils/jwt.js"
 
 export class AuthService {
   static async register(input: { username: string; displayName: string; email: string; password: string }) {
