@@ -1,0 +1,96 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum SessionStatus {
+  PLANNED
+  ONGOING
+  FINISHED
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  email        String   @unique
+  username     String   @unique
+  displayName  String
+  passwordHash String
+  createdAt    DateTime @default(now())
+
+  sessionsOrganized Session[]      @relation("OrganizerSessions")
+  participations     Participation[]
+  results            Result[]
+}
+
+model Game {
+  id              Int      @id @default(autoincrement())
+  name            String
+  externalId      String?  @unique
+  apiSource       String?
+  averageDuration Int?
+  minPlayers      Int?
+  maxPlayers      Int?
+  imageUrl        String?
+
+  sessions SessionGame[]
+}
+
+model Session {
+  id            Int            @id @default(autoincrement())
+  title         String
+  startDatetime DateTime
+  location      String
+  status        SessionStatus  @default(PLANNED)
+  organizerId   Int
+  createdAt     DateTime       @default(now())
+
+  organizer      User           @relation("OrganizerSessions", fields: [organizerId], references: [id])
+  games          SessionGame[]
+  participations Participation[]
+}
+
+model SessionGame {
+  id        Int     @id @default(autoincrement())
+  sessionId Int
+  gameId    Int
+  order     Int
+
+  session Session @relation(fields: [sessionId], references: [id])
+  game    Game    @relation(fields: [gameId], references: [id])
+  results Result[]
+
+  @@unique([sessionId, order])
+}
+
+model Participation {
+  id                Int               @id @default(autoincrement())
+  sessionId         Int
+  userId            Int
+  statusInvitation  InvitationStatus  @default(PENDING)
+
+  session Session @relation(fields: [sessionId], references: [id])
+  user    User    @relation(fields: [userId], references: [id])
+
+  @@unique([sessionId, userId])
+}
+
+model Result {
+  id            Int  @id @default(autoincrement())
+  sessionGameId Int
+  userId        Int
+  score         Int
+  playerRank    Int
+
+  sessionGame SessionGame @relation(fields: [sessionGameId], references: [id])
+  player      User        @relation(fields: [userId], references: [id])
+}

@@ -1,6 +1,7 @@
 node_modules/
 **/dist
-server/prisma/*
+server/prisma/dev.db
+server/prisma/dev.db-journal
 server/swagger_output.json
 .env
 .env.local

@@ -1,0 +1,121 @@
+.dashboard
+  display: flex
+  flex-direction: column
+  gap: 3rem
+  padding-bottom: 4rem
+
+.hero
+  text-align: center
+  padding: 2rem 0
+  
+  img.logo
+    max-width: 400px
+    margin-bottom: 1rem
+    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1))
+
+  h1
+    font-size: 2.5rem
+    margin-bottom: 0.5rem
+    color: #2C3E50
+
+  p
+    font-size: 1.2rem
+    color: #7F8C8D
+
+.section
+  display: flex
+  flex-direction: column
+  gap: 1.5rem
+
+.sectionHeader
+  display: flex
+  justify-content: space-between
+  align-items: center
+
+.nextGameCard
+  background: white
+  border-radius: 16px
+  padding: 2rem
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1)
+  display: flex
+  justify-content: space-between
+  align-items: center
+  border: 1px solid rgba(0,0,0,0.05)
+  position: relative
+  overflow: hidden
+
+  &::before
+    content: ''
+    position: absolute
+    top: 0
+    left: 0
+    width: 8px
+    height: 100%
+    background: #C0392B
+
+.nextGameContent
+  display: flex
+  flex-direction: column
+  gap: 0.5rem
+
+  h3
+    font-size: 1.8rem
+    margin: 0
+    color: #2C3E50
+
+  .date
+    font-size: 1.1rem
+    color: #7F8C8D
+    text-transform: capitalize
+
+.participants
+  display: flex
+  align-items: center
+  gap: 1rem
+  margin-top: 1rem
+
+  .label
+    font-weight: 600
+    color: #95A5A6
+
+.avatars
+  display: flex
+  gap: -10px
+
+.avatarPlaceholder
+  width: 40px
+  height: 40px
+  border-radius: 50%
+  color: white
+  display: flex
+  align-items: center
+  justify-content: center
+  font-weight: bold
+  border: 2px solid white
+  margin-left: -10px
+  &:first-child
+    margin-left: 0
+
+.actions
+  display: flex
+  gap: 1rem
+
+.pollOption
+  margin-bottom: 1rem
+  
+  span
+    display: block
+    margin-bottom: 0.5rem
+    font-weight: 600
+    color: #34495E
+
+.progressBar
+  height: 12px
+  background: #ECF0F1
+  border-radius: 6px
+  overflow: hidden
+  
+  div
+    height: 100%
+    background: #F1C40F
+    border-radius: 6px

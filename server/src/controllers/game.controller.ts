@@ -43,7 +43,7 @@ export class GameController {
   // Multer configuration for image uploads
   static upload = multer({
     storage: multer.diskStorage({
-      destination: async (req, _file, cb) => {
+      destination: async (req: Request, _file: Express.Multer.File, cb: (error: Error | null, destination: string) => void) => {
         try {
           const id = String(req.params.id)
           const dir = path.resolve('uploads', 'games', id)
@@ -53,12 +53,12 @@ export class GameController {
           cb(e as Error, '')
         }
       },
-      filename: (_req, file, cb) => {
+      filename: (_req: Request, file: Express.Multer.File, cb: (error: Error | null, filename: string) => void) => {
         const ext = path.extname(file.originalname || '').toLowerCase()
         cb(null, `image${ext || '.jpg'}`)
       }
     }),
-    fileFilter: (_req, file, cb) => {
+    fileFilter: (_req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
       const allowed = ['image/jpeg', 'image/png', 'image/webp']
       if (!allowed.includes(file.mimetype)) {
         cb(new Error('Type de fichier non supporte'))

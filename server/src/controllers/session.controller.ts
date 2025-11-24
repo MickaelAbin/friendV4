@@ -6,7 +6,7 @@ import { createSessionSchema, updateSessionSchema, recordResultsSchema } from '.
 export class SessionController {
   private static normalize(session: any) {
     if (session == null) return session
-    const { participations, ...rest } = session as any
+    const { participations, ...rest } = session
     return {
       ...rest,
       participants: participations
@@ -15,13 +15,13 @@ export class SessionController {
   static async list(req: Request, res: Response) {
     const sessions = await SessionService.list(req.currentUser!.id)
     res.set('Cache-Control', 'no-store')
-    res.json(sessions.map((s) => SessionController.normalize(s)))
+    res.json(sessions.map((s: any) => SessionController.normalize(s)))
   }
 
   static async discover(req: Request, res: Response) {
     const sessions = await SessionService.discover(req.currentUser!.id)
     res.set('Cache-Control', 'no-store')
-    res.json(sessions.map((s) => SessionController.normalize(s)))
+    res.json(sessions.map((s: any) => SessionController.normalize(s)))
   }
 
   static async get(req: Request, res: Response) {

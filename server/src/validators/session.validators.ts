@@ -1,6 +1,7 @@
 import { z } from 'zod'
 
-const sessionStatus = z.enum(['DRAFT', 'PLANNED', 'IN_PROGRESS', 'FINISHED', 'CANCELLED'])
+// Aligne avec l'enum Prisma SessionStatus: PLANNED | ONGOING | FINISHED
+const sessionStatus = z.enum(['PLANNED', 'ONGOING', 'FINISHED'])
 const invitationStatus = z.enum(['PENDING', 'ACCEPTED', 'DECLINED'])
 
 export const createSessionSchema = z.object({

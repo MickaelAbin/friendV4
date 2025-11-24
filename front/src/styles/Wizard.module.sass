@@ -1,0 +1,127 @@
+.wizardContainer
+  max-width: 600px
+  margin: 0 auto
+  padding-bottom: 4rem
+
+.progress
+  display: flex
+  justify-content: space-between
+  margin-bottom: 2rem
+  position: relative
+
+  &::before
+    content: ''
+    position: absolute
+    top: 50%
+    left: 0
+    width: 100%
+    height: 4px
+    background: #E5E7EB
+    z-index: 0
+    transform: translateY(-50%)
+
+.stepIndicator
+  width: 40px
+  height: 40px
+  border-radius: 50%
+  background: white
+  border: 4px solid #E5E7EB
+  display: flex
+  align-items: center
+  justify-content: center
+  font-weight: bold
+  color: #95A5A6
+  z-index: 1
+  transition: all 0.3s ease
+
+  &.active
+    border-color: #2C3E50
+    color: #2C3E50
+    transform: scale(1.1)
+
+  &.completed
+    background: #2C3E50
+    border-color: #2C3E50
+    color: white
+
+.stepContent
+  background: white
+  padding: 2rem
+  border-radius: 16px
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1)
+  min-height: 300px
+  display: flex
+  flex-direction: column
+  justify-content: space-between
+
+.stepTitle
+  font-size: 1.8rem
+  margin-bottom: 1.5rem
+  color: #2C3E50
+  text-align: center
+
+.formGroup
+  display: flex
+  flex-direction: column
+  gap: 1.5rem
+  margin-bottom: 2rem
+
+.field
+  display: flex
+  flex-direction: column
+  gap: 0.5rem
+
+  label
+    font-weight: 600
+    color: #34495E
+
+  input, select
+    padding: 1rem
+    border: 2px solid #ECF0F1
+    border-radius: 8px
+    font-size: 1.1rem
+    transition: border-color 0.2s
+
+    &:focus
+      border-color: #2C3E50
+      outline: none
+
+.gamesList
+  display: flex
+  flex-direction: column
+  gap: 1rem
+
+.gameItem
+  display: flex
+  align-items: center
+  gap: 1rem
+  background: #F9F7F2
+  padding: 0.8rem
+  border-radius: 8px
+
+  select
+    flex: 1
+    padding: 0.5rem
+
+.actions
+  display: flex
+  justify-content: space-between
+  margin-top: auto
+  padding-top: 2rem
+  border-top: 1px solid #F3F4F6
+
+.summary
+  display: flex
+  flex-direction: column
+  gap: 1rem
+  
+  .summaryItem
+    display: flex
+    justify-content: space-between
+    padding: 1rem
+    background: #F9F7F2
+    border-radius: 8px
+    
+    span:first-child
+      font-weight: 600
+      color: #7F8C8D

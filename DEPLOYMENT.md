@@ -1,22 +1,62 @@
-# Deploiement gratuit simplifie
+# Guide de Déploiement
 
-## API (Railway)
+Ce guide explique comment déployer l'application **Friendv4** en utilisant l'architecture cible :
+-   **Frontend** : Vercel
+-   **Backend** : Render
+-   **Base de données** : Clever Cloud (MySQL)
+-   **CI/CD** : GitHub Actions
 
-1. Creer un compte gratuit sur https://railway.app.
-2. Importer ce depot depuis GitHub ou utiliser Railway CLI pour deployer le dossier `server`.
-3. Configurer les variables d'environnement (voir `server/.env.example`).
-4. Ajouter une base SQLite persistee via le volume de stockage ou utiliser PostgreSQL gerer par Railway.
-5. Deployer : Railway installera les dependances et lancera `pnpm start`.
+## Prérequis
+-   Comptes sur [Vercel](https://vercel.com), [Render](https://render.com), et [Clever Cloud](https://www.clever-cloud.com).
+-   Dépôt GitHub connecté.
 
-## Front (Vercel)
+---
 
-1. Creer un compte gratuit sur https://vercel.com.
-2. Importer le projet et selectionner le dossier `front`.
-3. Definir `VITE_API_URL` vers l'URL exposee par le serveur Railway.
-4. Conserver la commande build `pnpm build` et output `dist`.
-5. Lancer le deployement et connecter le domaine genere par Vercel.
+## 1. Configuration de la Base de Données (Clever Cloud)
+1.  Connectez-vous à Clever Cloud.
+2.  Créez un nouvel add-on **MySQL** (le plan Dev est gratuit).
+3.  Notez les détails de connexion, en particulier l'**URI de connexion** (commence par `mysql://...`).
+    -   *Note : Vous devrez peut-être ajouter `?sslaccept=strict` à la fin de l'URL pour la compatibilité avec Prisma.*
 
-## Monorepo
+## 2. Configuration du Backend (Render)
+1.  Connectez-vous à Render.
+2.  Cliquez sur **New +** -> **Web Service**.
+3.  Connectez votre dépôt GitHub.
+4.  Sélectionnez le dépôt `Friendv4`.
+5.  Render devrait détecter le fichier `render.yaml` (sinon, choisissez "Build from render.yaml").
+6.  **Variables d'Environnement** : Vous serez invité à les ajouter.
+    -   `DATABASE_URL` : L'URI MySQL de Clever Cloud.
+    -   `JWT_SECRET` : Une longue chaîne aléatoire pour la sécurité.
+    -   `FRONTEND_URL` : L'URL de votre frontend Vercel (vous pourrez la mettre à jour plus tard).
+7.  Cliquez sur **Create Web Service**.
+8.  **Deploy Hook** : Allez dans Settings -> Deploy Hook. Copiez l'URL du hook. Vous en aurez besoin pour GitHub.
 
-- Utiliser `pnpm install --filter front...` et `--filter server...` si la plateforme ne gere pas le workspace complet.
-- Synchroniser les variables d'environnement entre les deux services (origine CORS, URL API, clef JWT).
+## 3. Configuration du Frontend (Vercel)
+1.  Connectez-vous à Vercel.
+2.  Cliquez sur **Add New...** -> **Project**.
+3.  Importez votre dépôt GitHub.
+4.  **Framework Preset** : Vite.
+5.  **Root Directory** : `front` (Important !).
+6.  **Variables d'Environnement** :
+    -   `VITE_API_URL` : L'URL de votre backend Render (ex: `https://friendv4-server.onrender.com`).
+7.  Cliquez sur **Deploy**.
+8.  **Vercel Token** : Allez dans Account Settings -> Tokens -> Create. Copiez ce token.
+
+## 4. Configuration CI/CD GitHub Actions
+1.  Allez dans votre dépôt GitHub -> Settings -> Secrets and variables -> Actions.
+2.  Ajoutez les "Repository secrets" suivants :
+    -   `VERCEL_TOKEN` : Le token que vous avez créé dans Vercel.
+    -   `RENDER_DEPLOY_HOOK_URL` : L'URL du hook de déploiement de Render.
+    -   `VERCEL_ORG_ID` (Optionnel) : Si demandé par la CLI Vercel (souvent nécessaire pour les comptes d'équipe ou si le projet est lié à une équipe).
+    -   `VERCEL_PROJECT_ID` (Optionnel) : L'ID du projet Vercel (trouvable dans les paramètres du projet Vercel).
+
+## 5. Finalisation
+1.  Poussez votre code sur la branche `main`.
+2.  L'onglet **Actions** dans GitHub devrait montrer le workflow `CI/CD` en cours d'exécution :
+    -   `deploy-backend` : Déclenche le déploiement Render.
+    -   `deploy-frontend` : Déploie sur Vercel.
+3.  Une fois déployé, mettez à jour la variable `FRONTEND_URL` dans Render avec votre URL Vercel réelle.
+
+## Dépannage
+-   **Erreur Prisma** : Si le backend ne parvient pas à se connecter à la BDD, vérifiez si vous devez exécuter les migrations. Vous pouvez ajouter une "Build Command" dans Render : `cd server && pnpm install && pnpm build && npx prisma migrate deploy`.
+-   **Erreur CORS** : Assurez-vous que `FRONTEND_URL` dans Render correspond exactement à votre domaine Vercel (sans slash à la fin).

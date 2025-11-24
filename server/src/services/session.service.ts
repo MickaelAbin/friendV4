@@ -12,7 +12,7 @@ interface CreateSessionInput {
   participants?: Array<{ userId: number; statusInvitation?: InvitationStatus }>
 }
 
-interface UpdateSessionInput extends Partial<CreateSessionInput> {}
+interface UpdateSessionInput extends Partial<CreateSessionInput> { }
 
 export class SessionService {
   static async list(userId: number) {
@@ -50,7 +50,7 @@ export class SessionService {
       where: {
         AND: [
           { organizerId: { not: userId } },
-          { status: { in: ["PLANNED", "ONGOING"] as any } },
+          { status: { in: ["PLANNED", "ONGOING"] } },
           {
             participations: {
               none: { userId }
@@ -90,7 +90,7 @@ export class SessionService {
     }
     const hasAccess =
       session.organizerId === userId ||
-      session.participations.some((participation) => participation.userId === userId)
+      session.participations.some((participation: any) => participation.userId === userId)
     if (!hasAccess) {
       throw new AppError("Acces refuse", StatusCodes.FORBIDDEN)
     }
@@ -107,19 +107,19 @@ export class SessionService {
         organizerId,
         games: input.games
           ? {
-              create: input.games.map((game) => ({
-                gameId: game.gameId,
-                order: game.order
-              }))
-            }
+            create: input.games.map((game) => ({
+              gameId: game.gameId,
+              order: game.order
+            }))
+          }
           : undefined,
         participations: input.participants
           ? {
-              create: input.participants.map((participant) => ({
-                userId: participant.userId,
-                statusInvitation: participant.statusInvitation ?? "PENDING"
-              }))
-            }
+            create: input.participants.map((participant) => ({
+              userId: participant.userId,
+              statusInvitation: participant.statusInvitation ?? "PENDING"
+            }))
+          }
           : undefined
       },
       include: {
@@ -148,21 +148,21 @@ export class SessionService {
         status: input.status,
         games: input.games
           ? {
-              deleteMany: {},
-              create: input.games.map((game) => ({
-                gameId: game.gameId,
-                order: game.order
-              }))
-            }
+            deleteMany: {},
+            create: input.games.map((game) => ({
+              gameId: game.gameId,
+              order: game.order
+            }))
+          }
           : undefined,
         participations: input.participants
           ? {
-              deleteMany: {},
-              create: input.participants.map((participant) => ({
-                userId: participant.userId,
-                statusInvitation: participant.statusInvitation ?? "PENDING"
-              }))
-            }
+            deleteMany: {},
+            create: input.participants.map((participant) => ({
+              userId: participant.userId,
+              statusInvitation: participant.statusInvitation ?? "PENDING"
+            }))
+          }
           : undefined
       },
       include: {
