@@ -1,0 +1,60 @@
+name: Create Branch on Assignment
+
+on:
+  issues:
+    types: [assigned]
+
+jobs:
+  create_branch:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create Branch
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Récupération des infos de l'issue
+          ISSUE_ID="${{ github.event.issue.number }}"
+          ISSUE_TITLE="${{ github.event.issue.title }}"
+          
+          # Nettoyage du titre pour en faire un nom de branche valide
+          # Remplace les espaces par des tirets, supprime les caractères spéciaux
+          SANITIZED_TITLE=$(echo "$ISSUE_TITLE" | tr '[:upper:]' '[:lower:]' | sed -e 's/[^a-zA-Z0-9]/-/g' -e 's/-\+/-/g' -e 's/^-//' -e 's/-$//')
+          
+          BRANCH_NAME="feat/issue-${ISSUE_ID}-${SANITIZED_TITLE}"
+          
+          echo "Préparation de la branche : $BRANCH_NAME"
+          
+          # Configuration git
+          git config user.name "GitHub Action"
+          git config user.email "action@github.com"
+          
+          # Vérifier si la branche existe déjà
+          git fetch origin
+          if git rev-parse --verify "origin/$BRANCH_NAME" >/dev/null 2>&1; then
+            echo "Branch $BRANCH_NAME already exists."
+            echo "BRANCH_EXISTED=true" >> $GITHUB_ENV
+          else
+            # Création et push
+            git checkout -b "$BRANCH_NAME"
+            git push -u origin "$BRANCH_NAME"
+            echo "BRANCH_CREATED=$BRANCH_NAME" >> $GITHUB_ENV
+          fi
+
+      - name: Comment on Issue
+        if: env.BRANCH_CREATED != ''
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const branchName = process.env.BRANCH_CREATED;
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `🚀 Branche **${branchName}** créée automatiquement !`
+            })
