@@ -37,6 +37,10 @@ export class GameService {
     })
   }
 
+  static async getById(id: number) {
+    return prisma.game.findUnique({ where: { id } })
+  }
+
   // Fast path: single XML call to BGG search, returns minimal info (no min/max/duration)
   static async searchExternalFast(query: string) {
     const BGG_SEARCH_V2 = 'https://boardgamegeek.com/xmlapi2/search'
@@ -189,7 +193,8 @@ export class GameService {
           minPlayers: Number.isFinite(minPlayers) ? minPlayers : null,
           maxPlayers: Number.isFinite(maxPlayers) ? maxPlayers : null,
           averageDuration: Number.isFinite(playtime) ? playtime : null,
-          thumbnailUrl: typeof (t as any).thumbnail === 'string' ? (t as any).thumbnail : (typeof (t as any).image === 'string' ? (t as any).image : undefined)
+          thumbnailUrl: typeof (t as any).image === 'string' ? (t as any).image
+                      : (typeof (t as any).thumbnail === 'string' ? (t as any).thumbnail : undefined)
         }
       })
 
@@ -241,15 +246,64 @@ export class GameService {
     const minPlayers = item.minplayers ? Number(item.minplayers['@_value']) : null
     const maxPlayers = item.maxplayers ? Number(item.maxplayers['@_value']) : null
     const playtime = item.playingtime ? Number(item.playingtime['@_value']) : null
-    const thumbnailUrl = typeof (item as any).thumbnail === 'string'
-      ? (item as any).thumbnail
-      : (typeof (item as any).image === 'string' ? (item as any).image : undefined)
+    const thumbnailUrl = typeof (item as any).image === 'string'
+      ? (item as any).image
+      : (typeof (item as any).thumbnail === 'string' ? (item as any).thumbnail : undefined)
+
+    // Extraction et nettoyage de la description
+    let description: string | null = null
+    const rawDesc = typeof (item as any).description === 'string' ? (item as any).description : null
+    if (rawDesc) {
+      const cleaned = rawDesc
+        .replace(/&#10;/g, ' ')
+        .replace(/&amp;/g, '&')
+        .replace(/&quot;/g, '"')
+        .replace(/&rsquo;/g, "'")
+        .replace(/&ndash;/g, '-')
+        .replace(/&mdash;/g, '—')
+        .replace(/&ldquo;/g, '"')
+        .replace(/&rdquo;/g, '"')
+        .trim()
+      
+      // Découpage en morceaux de ~450 caractères (limite API MyMemory = 500)
+      const chunks: string[] = []
+      const chunkSize = 450
+      for (let i = 0; i < cleaned.length && i < 3000; i += chunkSize) {
+        chunks.push(cleaned.substring(i, i + chunkSize))
+      }
+
+      // Traduction automatique séquentielle via Google Translate (GTX)
+      try {
+        const translatedChunks: string[] = []
+        // On garde une limite de chunks raisonnable pour la rapidité
+        for (const chunk of chunks.slice(0, 4)) {
+          try {
+            const encoded = encodeURIComponent(chunk)
+            const res = await axios.get(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=fr&dt=t&q=${encoded}`, {
+              timeout: 5000
+            })
+            // Google Translate renvoie un tableau imbriqué : res.data[0][0][0] pour le premier segment
+            const translated = res.data?.[0]?.map((seg: any) => seg[0]).join('')
+            translatedChunks.push(translated || chunk)
+            // Petite pause facultative (Google est plus tolérant)
+            await new Promise(r => setTimeout(r, 300))
+          } catch {
+            translatedChunks.push(chunk)
+          }
+        }
+        description = translatedChunks.join(' ')
+      } catch {
+        description = cleaned.substring(0, 1500)
+      }
+    }
+
     return {
       name,
       minPlayers: Number.isFinite(minPlayers) ? minPlayers : null,
       maxPlayers: Number.isFinite(maxPlayers) ? maxPlayers : null,
       averageDuration: Number.isFinite(playtime) ? playtime : null,
-      thumbnailUrl
+      thumbnailUrl,
+      description
     }
   }
 
@@ -261,6 +315,7 @@ export class GameService {
     minPlayers?: number | null
     maxPlayers?: number | null
     imageUrl?: string | null
+    description?: string | null
   }) {
     if (data.externalId) {
       return prisma.game.upsert({
@@ -272,7 +327,8 @@ export class GameService {
           averageDuration: data.averageDuration ?? null,
           minPlayers: data.minPlayers ?? null,
           maxPlayers: data.maxPlayers ?? null,
-          imageUrl: data.imageUrl ?? null
+          imageUrl: data.imageUrl ?? null,
+          description: data.description ?? null
         },
         update: {
           name: data.name,
@@ -280,7 +336,8 @@ export class GameService {
           averageDuration: data.averageDuration ?? null,
           minPlayers: data.minPlayers ?? null,
           maxPlayers: data.maxPlayers ?? null,
-          imageUrl: data.imageUrl ?? undefined
+          imageUrl: data.imageUrl ?? undefined,
+          description: data.description ?? undefined
         }
       })
     }
@@ -292,13 +349,18 @@ export class GameService {
         averageDuration: data.averageDuration ?? null,
         minPlayers: data.minPlayers ?? null,
         maxPlayers: data.maxPlayers ?? null,
-        imageUrl: data.imageUrl ?? null
+        imageUrl: data.imageUrl ?? null,
+        description: data.description ?? null
       }
     })
   }
 
   static async updateImageUrl(id: number, imageUrl: string) {
     return prisma.game.update({ where: { id }, data: { imageUrl } })
+  }
+
+  static async deleteGame(id: number) {
+    return prisma.game.delete({ where: { id } })
   }
 }
 

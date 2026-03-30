@@ -2,14 +2,24 @@
 @use './forms'
 @use './session'
 
-// Palette "Café Ludique & Carton"
-$background: #F9F7F2 // Beige Crème / Coquille d'œuf
-$primary: #2C3E50 // Bleu Marine Profond (Texte & Structure)
-$accent: #C0392B // Terracotta / Rouge Brique (Urgent / Actions)
-$secondary: #B7950B // Moutarde / Ocre (Décoration - F1C40F assombri)
-$text: #2C3E50 // Gris Anthracite
-$card-bg: #FFFFFF
-$card-border: #E5E7EB // Light grey for subtle borders
+$background: #FAF6ED // Beige parchemin
+$primary: #2C1810 // Marron très foncé
+$accent: #913529 // Rouge brique / Terracotta 
+$secondary: #A07823 // Vieil Or
+$teal: #326671 // Sarcelle foncé pour les sous-titres et la navigation
+$text: #2C1810
+$card-bg: #EAE2D1 // Beige pour cartes (podium, formulaires)
+$card-border: rgba(145, 53, 41, 0.1) // Bordure subtile rouge-brun
+
+:root
+  --background: #FAF6ED
+  --primary: #2C1810
+  --accent: #913529
+  --secondary: #A07823
+  --teal: #326671
+  --text: #2C1810
+  --card-bg: #EAE2D1
+  --card-border: rgba(145, 53, 41, 0.1)
 
 // Typography
 $font-heading: 'Merriweather', serif
@@ -30,8 +40,11 @@ body
 
 h1, h2, h3, h4, h5, h6
   font-family: $font-heading
-  color: $primary
-  font-weight: 700
+  font-weight: 900
+  color: var(--primary)
+
+h1
+  color: var(--accent)
 
 a
   color: inherit
@@ -45,34 +58,41 @@ select
 
 // Buttons with "Volume"
 .btn
-  background: $primary
-  color: white
+  background: $card-bg
+  color: $text
   padding: 0.8rem 1.5rem
-  border-radius: 0.5rem
-  border: none
-  border-bottom: 4px solid darken($primary, 10%)
+  border-radius: 20px
+  border: 1px solid rgba(0,0,0,0.1)
   display: inline-flex
   align-items: center
   justify-content: center
   gap: 0.5rem
   cursor: pointer
   font-weight: 600
-  transition: all 0.1s ease-in-out
+  transition: all 0.2s ease-in-out
   transform: translateY(0)
+  font-size: 0.95rem
 
   &:active
-    transform: translateY(2px)
-    border-bottom-width: 2px
+    transform: scale(0.98)
 
   &.secondary
-    background: $secondary
-    color: white
-    border-bottom-color: darken($secondary, 10%)
+    background: transparent
+    color: $text
+    border: 1px dashed rgba(0,0,0,0.2)
+    border-radius: 20px
 
   &.accent
     background: $accent
     color: white
-    border-bottom-color: darken($accent, 10%)
+    border: none
+    box-shadow: 0 4px 10px rgba(154, 48, 38, 0.3)
+    border-radius: 20px
+    font-size: 1rem
+
+    &:hover
+      background: darken($accent, 5%)
+      box-shadow: 0 6px 14px rgba(154, 48, 38, 0.4)
 
   &:disabled
     cursor: not-allowed

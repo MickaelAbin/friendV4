@@ -9,6 +9,7 @@ export interface User {
 export interface Game {
   id: number
   name: string
+  description?: string | null
   externalId: string
   apiSource: string
   averageDuration: number | null

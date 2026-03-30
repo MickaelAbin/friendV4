@@ -6,6 +6,11 @@ export const listGames = async (): Promise<Game[]> => {
   return data
 }
 
+export const fetchGameById = async (id: number): Promise<Game> => {
+  const { data } = await apiClient.get<Game>(`/api/games/${id}`)
+  return data
+}
+
 export const searchGames = async (query: string) => {
   const { data } = await apiClient.get<Array<Omit<Game, 'id'> & { id?: number }>>('/api/games/search', {
     params: { q: query, fast: 1 }
@@ -14,10 +19,14 @@ export const searchGames = async (query: string) => {
 }
 
 export const fetchGameThing = async (externalId: string) => {
-  const { data } = await apiClient.get<{ name: string; minPlayers: number | null; maxPlayers: number | null; averageDuration: number | null; thumbnailUrl?: string | null }>(
-    '/api/games/thing',
-    { params: { externalId } }
-  )
+  const { data } = await apiClient.get<{
+    name: string
+    minPlayers: number | null
+    maxPlayers: number | null
+    averageDuration: number | null
+    thumbnailUrl?: string | null
+    description?: string | null
+  }>('/api/games/thing', { params: { externalId } })
   return data
 }
 
@@ -29,6 +38,7 @@ export const saveGame = async (payload: {
   minPlayers?: number | null
   maxPlayers?: number | null
   imageUrl?: string | null
+  description?: string | null
 }) => {
   // Enrichir via BGG thing si externalId fourni (remplit min/max/duree/image)
   let enriched = {}
@@ -40,7 +50,8 @@ export const saveGame = async (payload: {
           averageDuration: data.averageDuration ?? null,
           minPlayers: data.minPlayers ?? null,
           maxPlayers: data.maxPlayers ?? null,
-          imageUrl: data.thumbnailUrl ?? null
+          imageUrl: data.thumbnailUrl ?? null,
+          description: data.description ?? null
         }
       }
     } catch {
@@ -56,9 +67,13 @@ export const saveGame = async (payload: {
     averageDuration: (enriched as any).averageDuration ?? payload.averageDuration ?? null,
     minPlayers: (enriched as any).minPlayers ?? payload.minPlayers ?? null,
     maxPlayers: (enriched as any).maxPlayers ?? payload.maxPlayers ?? null,
-    imageUrl: (enriched as any).imageUrl ?? payload.imageUrl ?? undefined
+    imageUrl: (enriched as any).imageUrl ?? payload.imageUrl ?? undefined,
+    description: (enriched as any).description ?? undefined
   }
   const { data } = await apiClient.post<Game>('/api/games', body)
   return data
 }
 
+export const deleteGame = async (id: number): Promise<void> => {
+  await apiClient.delete(`/api/games/${id}`)
+}

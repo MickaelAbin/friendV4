@@ -1,4 +1,5 @@
 import { useForm } from "react-hook-form"
+import { useTranslation } from "react-i18next"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Link } from "react-router-dom"
@@ -7,14 +8,14 @@ import { FormField } from "../components/forms/FormField"
 
 const registerSchema = z
   .object({
-    username: z.string().min(3, "Au moins 3 caracteres"),
-    displayName: z.string().min(1, "Nom affiche requis"),
-    email: z.string().email("Email invalide"),
-    password: z.string().min(8, "8 caracteres minimum"),
+    username: z.string().min(3, "auth.min3Chars"),
+    displayName: z.string().min(1, "auth.displayRequired"),
+    email: z.string().email("auth.invalidEmail"),
+    password: z.string().min(8, "auth.min8Chars"),
     confirmPassword: z.string()
   })
   .refine((values) => values.password === values.confirmPassword, {
-    message: "Les mots de passe ne correspondent pas",
+    message: "auth.passwordMismatch",
     path: ["confirmPassword"]
   })
 
@@ -22,6 +23,7 @@ type RegisterForm = z.infer<typeof registerSchema>
 
 export const RegisterPage = () => {
   const { register: signup, loading } = useAuth()
+  const { t } = useTranslation()
   const {
     register,
     handleSubmit,
@@ -31,32 +33,32 @@ export const RegisterPage = () => {
   })
 
   const onSubmit = handleSubmit(async ({ confirmPassword, ...values }) => {
-    await signup(values)
+    await signup(values as any)
   })
 
   return (
     <div className="page-centered">
       <div className="card" style={{ width: "min(480px, 100%)" }}>
-        <h2>Creer un compte</h2>
+        <h2>{t('auth.register')}</h2>
         <form className="form-grid" onSubmit={onSubmit}>
-          <FormField label="Nom d'utilisateur" {...register("username")} error={errors.username} />
-          <FormField label="Nom affiche" {...register("displayName")} error={errors.displayName} />
-          <FormField label="Email" type="email" {...register("email")} error={errors.email} />
-          <FormField label="Mot de passe" type="password" {...register("password")} error={errors.password} />
+          <FormField label={t('auth.username')} {...register("username")} error={errors.username ? { ...errors.username, message: t(errors.username.message as string) } : undefined} />
+          <FormField label={t('auth.displayName')} {...register("displayName")} error={errors.displayName ? { ...errors.displayName, message: t(errors.displayName.message as string) } : undefined} />
+          <FormField label={t('auth.email')} type="email" {...register("email")} error={errors.email ? { ...errors.email, message: t(errors.email.message as string) } : undefined} />
+          <FormField label={t('auth.password')} type="password" {...register("password")} error={errors.password ? { ...errors.password, message: t(errors.password.message as string) } : undefined} />
           <FormField
-            label="Confirmer le mot de passe"
+            label={t('auth.confirmPassword')}
             type="password"
             {...register("confirmPassword")}
-            error={errors.confirmPassword}
+            error={errors.confirmPassword ? { ...errors.confirmPassword, message: t(errors.confirmPassword.message as string) } : undefined}
           />
           <div className="form-actions">
             <button type="submit" className="btn secondary" disabled={loading}>
-              S'inscrire
+              {t('auth.registerBtn')}
             </button>
           </div>
         </form>
         <p>
-          Deja inscrit ? <Link to="/login">Connectez-vous</Link>
+          {t('auth.alreadyRegistered')} <Link to="/login">{t('auth.login')}</Link>
         </p>
       </div>
     </div>

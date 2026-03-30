@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query"
+import { useTranslation } from "react-i18next"
 import { Link } from "react-router-dom"
 import { fetchSessions, fetchDiscoverSessions } from "../api/sessions"
 import { queryKeys } from "../store/queryKeys"
@@ -16,6 +17,7 @@ export const DashboardPage = () => {
     queryKey: ["sessions", "discover"],
     queryFn: fetchDiscoverSessions
   })
+  const { t, i18n } = useTranslation()
 
   if (isLoading) return <div className="page-centered"><DiceLoader /></div>
 
@@ -25,15 +27,15 @@ export const DashboardPage = () => {
     <div className={styles.dashboard}>
       <header className={styles.hero}>
         <img src={logo} alt="Friends Board Game Club" className={styles.logo} />
-        <p>Organisez vos après-midis jeux et invitez vos amis.</p>
+        <p>{t('dashboard.hero')}</p>
       </header>
 
       <section className={styles.section}>
         <div className={styles.sectionHeader}>
-          <h2>Prochaine Partie</h2>
+          <h2>{t('dashboard.nextSession')}</h2>
           {nextSession && (
             <Link to={`/sessions/${nextSession.id}`} className="btn accent">
-              Voir les détails
+              {t('dashboard.viewDetails')}
             </Link>
           )}
         </div>
@@ -41,9 +43,9 @@ export const DashboardPage = () => {
         {nextSession ? (
           <div className={styles.nextGameCard}>
             <div className={styles.nextGameContent}>
-              <h3>{nextSession.games?.[0]?.game?.name || nextSession.title || "Session de jeu"}</h3>
+              <h3>{nextSession.games?.[0]?.game?.name || nextSession.title || t('dashboard.sessionFallback')}</h3>
               <p className={styles.date}>
-                {new Date(nextSession.startDatetime).toLocaleDateString('fr-FR', {
+                {new Date(nextSession.startDatetime).toLocaleDateString(i18n.language, {
                   weekday: 'long',
                   day: 'numeric',
                   month: 'long',
@@ -52,7 +54,7 @@ export const DashboardPage = () => {
                 })}
               </p>
               <div className={styles.participants}>
-                <span className={styles.label}>Participants:</span>
+                <span className={styles.label}>{t('common.participants')}:</span>
                 <div className={styles.avatars}>
                   {nextSession.participants?.slice(0, 5).map((p, i) => (
                     <div
@@ -73,24 +75,24 @@ export const DashboardPage = () => {
               </div>
             </div>
             <div className={styles.actions}>
-              <button className="btn">Je viens !</button>
-              <button className="btn secondary">Pas dispo</button>
+              <button className="btn">{t('dashboard.coming')}</button>
+              <button className="btn secondary">{t('dashboard.notAvailable')}</button>
             </div>
           </div>
         ) : (
           <div className="card">
-            <p>Aucune partie prévue. C'est le moment d'en lancer une !</p>
+            <p>{t('dashboard.noSessions')}</p>
             <Link className="btn" to="/sessions/new">
-              Organiser une session
+              {t('dashboard.organizeBtn')}
             </Link>
           </div>
         )}
       </section>
 
       <section className={styles.section}>
-        <h2>Sondages en cours</h2>
+        <h2>{t('dashboard.currentPolls')}</h2>
         <div className="card">
-          <h3>On joue à quoi samedi ?</h3>
+          <h3>{t('dashboard.saturdayPoll')}</h3>
           <div className={styles.pollOption}>
             <span>Catan</span>
             <div className={styles.progressBar}><div style={{ width: '70%' }}></div></div>
@@ -108,7 +110,7 @@ export const DashboardPage = () => {
 
       {discover && discover.length > 0 && (
         <section className={styles.section}>
-          <h2>Sessions disponibles</h2>
+          <h2>{t('dashboard.discoverSessions')}</h2>
           <div className="session-grid">
             {discover.map((session) => (
               <SessionCard key={`d-${session.id}`} session={session} />

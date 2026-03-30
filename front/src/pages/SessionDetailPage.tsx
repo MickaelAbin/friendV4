@@ -1,9 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { useTranslation } from "react-i18next"
 import { useParams, Link } from "react-router-dom"
 import { fetchSession, recordResults } from "../api/sessions"
 import { queryKeys } from "../store/queryKeys"
 import { format } from "date-fns"
-import { fr } from "date-fns/locale"
+import { fr, enUS, de, es, zhCN } from "date-fns/locale"
 import { useAuth } from "../authentication/useAuth"
 import { useMemo, useState } from "react"
 import type { AxiosError } from "axios"
@@ -12,6 +13,7 @@ export const SessionDetailPage = () => {
   const { id } = useParams<{ id: string }>()
   const sessionId = Number(id)
   const { user } = useAuth()
+  const { t, i18n } = useTranslation()
   const queryClient = useQueryClient()
 
   const { data: session, isLoading, error } = useQuery({
@@ -64,26 +66,28 @@ export const SessionDetailPage = () => {
   }
 
   if (!Number.isFinite(sessionId)) {
-    return <div className="page-centered">Session invalide</div>
+    return <div className="page-centered">{t('sessionDetail.invalid')}</div>
   }
 
   if (isLoading) {
-    return <div className="page-centered">Chargement...</div>
+    return <div className="page-centered">{t('common.loading')}</div>
   }
 
   if (error) {
     const err = error as AxiosError
     if (err.response?.status === 403) {
-      return <div className="page-centered">Accès refusé. Rejoignez d'abord la session depuis le tableau de bord.</div>
+      return <div className="page-centered">{t('sessionDetail.accessDenied')}</div>
     }
-    return <div className="page-centered">Session introuvable</div>
+    return <div className="page-centered">{t('sessionDetail.notFound')}</div>
   }
 
   if (!session) {
-    return <div className="page-centered">Session introuvable</div>
+    return <div className="page-centered">{t('sessionDetail.notFound')}</div>
   }
 
-  const date = format(new Date(session.startDatetime), "eeee d MMMM yyyy 'a' HH:mm", { locale: fr })
+  const dateLocaleMap: Record<string, any> = { fr, en: enUS, de, es, zh: zhCN }
+  const currentLocale = dateLocaleMap[i18n.language] || fr
+  const date = format(new Date(session.startDatetime), t('sessionDetail.dateFormat'), { locale: currentLocale })
 
   return (
     <div className="card">
@@ -95,58 +99,58 @@ export const SessionDetailPage = () => {
         </div>
         {isOrganizer && (
           <Link to={`/sessions/${session.id}/edit`} className="btn secondary">
-            Modifier
+            {t('sessionDetail.modify')}
           </Link>
         )}
       </header>
 
       <section>
-        <h2>Participants</h2>
+        <h2>{t('common.participants')}</h2>
         <ul>
           <li key={`org-${session.organizer?.id ?? 'self'}`}>
-            {session.organizer?.displayName ?? session.organizer?.username ?? 'Organisateur'} (organisateur)
+            {session.organizer?.displayName ?? session.organizer?.username ?? t('sessionDetail.organizer')} ({t('sessionDetail.organizer').toLowerCase()})
           </li>
           {session.participants?.map((participant) => (
             <li key={participant.id}>
               {participant.user?.displayName ?? participant.user?.username} - {participant.statusInvitation}
             </li>
-          )) ?? <li>Aucun participant</li>}
+          )) ?? <li>{t('sessionDetail.noParticipants')}</li>}
         </ul>
       </section>
 
       <section>
-        <h2>Jeux prevus</h2>
+        <h2>{t('sessionDetail.plannedGames')}</h2>
         <ol>
           {session.games?.map((sessionGame) => (
             <li key={sessionGame.id}>
-              {sessionGame.order}. {sessionGame.game?.name ?? "Jeu inconnu"}
+              {sessionGame.order}. {sessionGame.game?.name ?? t('sessionDetail.unknownGame')}
             </li>
-          )) ?? <li>Aucun jeu ajoute</li>}
+          )) ?? <li>{t('sessionDetail.noGames')}</li>}
         </ol>
       </section>
 
       <section>
-        <h2>Resultats</h2>
+        <h2>{t('sessionDetail.results')}</h2>
         {session.games?.map((sessionGame) => (
           <div key={sessionGame.id}>
             <h3>{sessionGame.game?.name}</h3>
             <ul>
               {sessionGame.results?.map((result) => (
-                <li key={result.id}>
-                  #{result.playerRank} - {result.player?.displayName ?? result.player?.username}: {result.score} pts
+                   <li key={result.id}>
+                  #{result.playerRank} - {result.player?.displayName ?? result.player?.username}: {result.score} {t('history.pts')}
                 </li>
-              )) ?? <li>Pas encore de resultats</li>}
+              )) ?? <li>{t('sessionDetail.noResults')}</li>}
             </ul>
           </div>
-        )) ?? <p>Aucun resultat enregistre.</p>}
+        )) ?? <p>{t('sessionDetail.noResultsRecorded')}</p>}
       </section>
 
       {isOrganizer && session.games && session.games.length > 0 && (
         <section className="card">
-          <h2>Saisir des résultats</h2>
+          <h2>{t('sessionDetail.enterResults')}</h2>
           <div className="form-actions" style={{ gap: "0.75rem", marginBottom: "0.75rem" }}>
             <label>
-              <span>Jeu de la session</span>
+              <span>{t('sessionDetail.sessionGame')}</span>
               <select
                 value={selectedSessionGameId}
                 onChange={(e) => setSelectedSessionGameId(Number(e.target.value))}
@@ -165,7 +169,7 @@ export const SessionDetailPage = () => {
               <div key={p.userId} className="card" style={{ padding: "1rem", gap: "0.5rem" }}>
                 <strong>{p.user?.displayName ?? p.user?.username}</strong>
                 <label>
-                  <span>Score</span>
+                  <span>{t('sessionDetail.score')}</span>
                   <input
                     type="number"
                     defaultValue={scores[p.userId]?.score ?? 0}
@@ -173,7 +177,7 @@ export const SessionDetailPage = () => {
                   />
                 </label>
                 <label>
-                  <span>Rang</span>
+                  <span>{t('sessionDetail.rank')}</span>
                   <input
                     type="number"
                     min={1}
@@ -186,7 +190,7 @@ export const SessionDetailPage = () => {
           </div>
           <div className="form-actions" style={{ marginTop: "1rem" }}>
             <button className="btn secondary" type="button" onClick={() => saveResults.mutate()} disabled={saveResults.isPending || !selectedSessionGameId || resultsPayload.length === 0}>
-              Enregistrer les résultats
+              {t('sessionDetail.saveResults')}
             </button>
           </div>
         </section>

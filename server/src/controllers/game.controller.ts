@@ -11,6 +11,16 @@ export class GameController {
     res.json(games)
   }
 
+  static async getById(req: Request, res: Response) {
+    const id = Number(req.params.id)
+    if (!Number.isFinite(id)) {
+      return res.status(StatusCodes.BAD_REQUEST).json({ message: 'ID invalide' })
+    }
+    const game = await GameService.getById(id)
+    if (!game) return res.status(StatusCodes.NOT_FOUND).json({ message: 'Jeu introuvable' })
+    return res.json(game)
+  }
+
   static async searchExternal(req: Request, res: Response) {
     const query = String(req.query.q ?? "")
     if (query.length < 2) {
@@ -26,6 +36,15 @@ export class GameController {
   static async save(req: Request, res: Response) {
     const game = await GameService.saveGame(req.body)
     res.status(StatusCodes.CREATED).json(game)
+  }
+
+  static async delete(req: Request, res: Response) {
+    const id = Number(req.params.id)
+    if (!Number.isFinite(id)) {
+      return res.status(StatusCodes.BAD_REQUEST).json({ message: 'ID invalide' })
+    }
+    await GameService.deleteGame(id)
+    return res.status(StatusCodes.NO_CONTENT).send()
   }
 
   static async thing(req: Request, res: Response) {

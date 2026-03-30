@@ -1,0 +1,311 @@
+.plannerContainer
+  max-width: 1200px
+  margin: 0 auto
+  padding: 2rem 0
+  
+  @media (max-width: 768px)
+    padding: 1rem 0
+
+.header
+  margin-bottom: 2rem
+  h1
+    font-size: 2.5rem
+    margin: 0
+  p
+    margin: 0.5rem 0 0 0
+    color: var(--teal)
+    font-size: 1.1rem
+
+.grid
+  display: grid
+  grid-template-columns: 350px 1fr
+  gap: 2rem
+  
+  @media (max-width: 900px)
+    grid-template-columns: 1fr
+
+.section
+  background: var(--card-bg)
+  border-radius: 20px
+  padding: 1.5rem
+  border: 1px solid var(--card-border)
+  
+  .sectionTitle
+    display: flex
+    align-items: center
+    gap: 1rem
+    margin-bottom: 1.5rem
+    
+    .stepNumber
+      background: var(--accent)
+      color: white
+      width: 40px
+      height: 40px
+      display: flex
+      align-items: center
+      justify-content: center
+      border-radius: 12px
+      font-weight: 900
+      font-size: 1.2rem
+      
+    h2
+      margin: 0
+      font-size: 1.5rem
+      color: var(--primary)
+      font-weight: 800
+
+.badge
+  background: rgba(160, 120, 35, 0.2)
+  color: var(--secondary)
+  padding: 0.3rem 0.8rem
+  border-radius: 20px
+  font-size: 0.8rem
+  font-weight: bold
+  text-transform: uppercase
+  margin-left: auto
+
+.fieldTitle
+  font-weight: 700
+  font-size: 0.85rem
+  letter-spacing: 1px
+  text-transform: uppercase
+  color: var(--primary)
+  margin-bottom: 0.5rem
+  display: block
+
+.inputBox
+  background: rgba(0,0,0,0.03)
+  border: 1px solid rgba(0,0,0,0.05)
+  border-radius: 8px
+  padding: 0.8rem 1rem
+  width: 100%
+  color: var(--primary)
+  font-weight: 600
+  font-family: var(--font-body)
+  margin-bottom: 1.5rem
+  transition: border 0.2s
+  
+  &:focus
+    outline: none
+    border-color: var(--accent)
+
+.timeToggle
+  display: flex
+  gap: 0.5rem
+  margin-bottom: 1.5rem
+  
+  label
+    flex: 1
+    text-align: center
+    padding: 0.8rem
+    background: rgba(0,0,0,0.03)
+    border: 1px solid rgba(0,0,0,0.05)
+    border-radius: 8px
+    cursor: pointer
+    font-weight: 600
+    transition: all 0.2s
+    
+    input
+      display: none
+      
+    &:has(input:checked)
+      background: white
+      border-color: var(--accent)
+      color: var(--accent)
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05)
+
+.quoteBox
+  border-left: 4px solid var(--secondary)
+  padding: 1rem 1rem 1rem 1.5rem
+  font-style: italic
+  color: #7F8C8D
+  font-size: 0.9rem
+  background: rgba(255,255,255,0.3)
+  border-radius: 0 8px 8px 0
+
+.gamesGrid
+  display: grid
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr))
+  gap: 1rem
+
+.gameCard
+  background: white
+  border-radius: 12px
+  overflow: hidden
+  border: 1px solid var(--card-border)
+  display: flex
+  flex-direction: column
+  position: relative
+  cursor: pointer
+  transition: transform 0.2s, box-shadow 0.2s
+
+  &:hover
+    transform: translateY(-3px)
+    box-shadow: 0 5px 15px rgba(0,0,0,0.05)
+
+  &.selected
+    border: 2px solid var(--accent)
+    .checkBadge
+      display: flex
+
+  .cover
+    height: 120px
+    width: 100%
+    object-fit: cover
+
+  .content
+    padding: 1rem
+    
+    h3
+      margin: 0 0 0.3rem 0
+      font-size: 1.1rem
+    
+    p
+      margin: 0
+      font-size: 0.75rem
+      color: #999
+
+  .voteBtn
+    margin: 1rem
+    padding: 0.5rem
+    border-radius: 8px
+    background: var(--card-bg)
+    border: none
+    font-weight: bold
+    cursor: pointer
+    pointer-events: none // Managed by card click
+
+  &.selected .voteBtn
+    background: rgba(150, 53, 41, 0.1)
+    color: var(--accent)
+
+.checkBadge
+  position: absolute
+  top: 10px
+  right: 10px
+  background: var(--secondary)
+  color: white
+  width: 24px
+  height: 24px
+  border-radius: 50%
+  display: none
+  align-items: center
+  justify-content: center
+  font-size: 0.8rem
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2)
+
+.bottomSection
+  grid-column: 1 / -1
+  display: grid
+  grid-template-columns: 1fr 350px
+  gap: 2rem
+  align-items: stretch
+
+  @media (max-width: 900px)
+    grid-template-columns: 1fr
+
+.guestList
+  display: flex
+  gap: 1rem
+  flex-wrap: wrap
+  align-items: center
+
+.guestItem
+  display: flex
+  align-items: center
+  gap: 0.5rem
+  background: white
+  padding: 0.3rem 1rem 0.3rem 0.3rem
+  border-radius: 30px
+  border: 1px solid var(--card-border)
+  font-weight: 600
+  font-size: 0.9rem
+
+  img
+    width: 30px
+    height: 30px
+    border-radius: 50%
+    object-fit: cover
+
+.inviteBtn
+  border: 1px dashed var(--secondary)
+  background: rgba(255,255,255,0.5)
+  color: var(--secondary)
+  padding: 0.6rem 1rem
+  border-radius: 30px
+  cursor: pointer
+  font-weight: bold
+  display: flex
+  align-items: center
+  gap: 0.5rem
+
+.summaryPanel
+  background: white
+  border-radius: 20px
+  padding: 2rem
+  border: 1px solid var(--accent)
+  box-shadow: 0 10px 30px rgba(150,53,41,0.1)
+  position: relative
+
+  h3
+    margin: 0 0 1.5rem 0
+    font-size: 1.3rem
+    
+  .summaryItem
+    display: flex
+    gap: 1rem
+    margin-bottom: 1.5rem
+    
+    .icon
+      font-size: 1.2rem
+      color: var(--accent)
+    
+    .details
+      display: flex
+      flex-direction: column
+      
+      .label
+        font-size: 0.75rem
+        color: #999
+        text-transform: uppercase
+        font-weight: bold
+      
+      .value
+        font-weight: 700
+        color: var(--primary)
+
+.submitBtn
+  background: var(--accent)
+  color: white
+  border: none
+  border-radius: 12px
+  width: 100%
+  padding: 1.2rem
+  font-size: 1.2rem
+  font-weight: bold
+  cursor: pointer
+  display: flex
+  align-items: center
+  justify-content: center
+  gap: 0.5rem
+  transition: all 0.2s
+  
+  &:hover
+    background: darken(#9A3026, 5%)
+    transform: translateY(-2px)
+    box-shadow: 0 5px 15px rgba(150,53,41,0.3)
+
+.iconBadge
+  position: absolute
+  right: -15px
+  bottom: -15px
+  background: var(--secondary)
+  color: white
+  width: 50px
+  height: 50px
+  border-radius: 50%
+  display: flex
+  align-items: center
+  justify-content: center
+  font-size: 1.5rem
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2)
