@@ -1,0 +1,60 @@
+.avatar-container
+  position: relative
+  display: inline-flex
+  align-items: center
+  justify-content: center
+  border-radius: 50%
+  overflow: hidden
+  background: var(--card-bg)
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2), inset 0 2px 4px rgba(255, 255, 255, 0.1)
+  border: 4px solid #D4AF37 // Couleur dorée par défaut
+  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)
+
+  &.red
+    border-color: #C0392B
+    background: #C0392B // Fond rouge pour le conteneur
+    box-shadow: 0 4px 12px rgba(192, 57, 43, 0.3), inset 0 2px 4px rgba(255, 255, 255, 0.2)
+    .image
+      background: #C0392B
+    .fallback
+      background: #C0392B
+      color: white
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.3)
+
+  &:hover
+    transform: scale(1.15) rotate(5deg)
+    z-index: 10
+
+.frame
+  position: absolute
+  top: 0
+  left: 0
+  width: 100%
+  height: 100%
+  border-radius: 50%
+  border: 1px solid rgba(0,0,0,0.1)
+  pointer-events: none
+  box-shadow: inset 0 0 10px rgba(0,0,0,0.2)
+
+.image
+  width: 100%
+  height: 100%
+  object-fit: cover
+  background: var(--card-bg)
+
+.fallback
+  display: flex
+  align-items: center
+  justify-content: center
+  width: 100%
+  height: 100%
+  background: #FAF6ED
+  color: var(--secondary)
+  font-family: 'Merriweather', serif
+  font-weight: 900
+  letter-spacing: 0.5px
+  text-shadow: 1px 1px 0px rgba(255,255,255,0.5)
+
+.initials
+  font-size: 1.2rem
+  user-select: none

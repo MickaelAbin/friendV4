@@ -1,11 +1,20 @@
 import { format } from "date-fns"
-import { fr } from "date-fns/locale"
+import { fr, enUS, de, es, zhCN } from "date-fns/locale"
 import { Link } from "react-router-dom"
+import { useTranslation } from "react-i18next"
 import type { Session } from "../../api/types"
 import { useAuth } from "../../authentication/useAuth"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { respondParticipation } from "../../api/sessions"
 import { queryKeys } from "../../store/queryKeys"
+
+const dateLocaleMap: Record<string, any> = {
+  fr,
+  en: enUS,
+  es,
+  de,
+  zh: zhCN
+}
 
 interface SessionCardProps {
   session: Session
@@ -13,7 +22,9 @@ interface SessionCardProps {
 
 export const SessionCard: React.FC<SessionCardProps> = ({ session }) => {
   const { user } = useAuth()
-  const date = format(new Date(session.startDatetime), "eeee d MMMM yyyy 'a' HH:mm", { locale: fr })
+  const { t, i18n } = useTranslation()
+  const currentLocale = dateLocaleMap[i18n.language] || fr
+  const date = format(new Date(session.startDatetime), t('sessionDetail.dateFormat'), { locale: currentLocale })
   const attendeeCount = (session.participants?.length ?? 0) + 1
   const gamesCount = session.games?.length ?? 0
   const isOrganizer = user?.id === session.organizerId
@@ -59,28 +70,28 @@ export const SessionCard: React.FC<SessionCardProps> = ({ session }) => {
       <p className="session-meta">{date}</p>
       <p className="session-meta">{session.location}</p>
       <div className="session-stats">
-        <span>{attendeeCount} participant(s)</span>
-        <span>{gamesCount} jeu(x)</span>
+        <span>{attendeeCount} {t('common.participants')}</span>
+        <span>{gamesCount} {t('common.games')}</span>
       </div>
       <div className="form-actions">
         {canView && (
           <Link className="btn secondary" to={`/sessions/${session.id}`}>
-            Voir la session
+            {t('common.viewMore')}
           </Link>
         )}
         {isOrganizer && (
           <Link className="btn" to={`/sessions/${session.id}/edit`}>
-            Modifier
+            {t('common.modify')}
           </Link>
         )}
         {canJoin && (
           <button className="btn" type="button" onClick={() => joinMutation.mutate()} disabled={joinMutation.isPending}>
-            Rejoindre
+            {t('common.join')}
           </button>
         )}
         {canLeave && (
           <button className="btn" type="button" onClick={() => leaveMutation.mutate()} disabled={leaveMutation.isPending}>
-            Se désinscrire
+            {t('common.leave')}
           </button>
         )}
       </div>

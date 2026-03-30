@@ -11,6 +11,8 @@ import authRoutes from './routes/auth.routes.js'
 import sessionRoutes from './routes/session.routes.js'
 import gameRoutes from './routes/game.routes.js'
 import participationRoutes from './routes/participation.routes.js'
+import userRoutes from './routes/user.routes.js'
+import statsRoutes from './routes/stats.routes.js'
 import path from 'node:path'
 
 const app = express()
@@ -36,6 +38,8 @@ app.use('/api/auth', authRoutes)
 app.use('/api/sessions', sessionRoutes)
 app.use('/api/games', gameRoutes)
 app.use('/api/participations', participationRoutes)
+app.use('/api/users', userRoutes)
+app.use('/api/stats', statsRoutes)
 
 app.use(errorHandler)
 

@@ -4,17 +4,20 @@ import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useNavigate, useParams } from "react-router-dom"
-import { createSession, fetchSession, updateSession } from "../api/sessions"
+import { fetchSession, createSession, updateSession } from "../api/sessions"
 import { listGames } from "../api/games"
+import { fetchUsers } from "../api/users"
 import { queryKeys } from "../store/queryKeys"
-import { motion, AnimatePresence } from "framer-motion"
+import { useTranslation } from 'react-i18next'
 import confetti from "canvas-confetti"
-import styles from "../styles/Wizard.module.sass"
+import styles from "../styles/Planner.module.sass"
 
+// Using existing schema with minor tweaks to fit new UX
 const sessionSchema = z.object({
-  title: z.string().min(3, "Titre trop court"),
-  location: z.string().min(1, "Lieu requis"),
-  startDatetime: z.string().min(1, "Date requise"),
+  title: z.string().optional(),
+  location: z.string().optional(),
+  date: z.string().min(1, "planner.dateRequired"),
+  time: z.string().min(1, "planner.timeRequired"),
   games: z
     .array(
       z.object({
@@ -22,17 +25,18 @@ const sessionSchema = z.object({
         order: z.coerce.number().int().min(1)
       })
     )
+    .optional(),
+  participants: z
+    .array(
+      z.object({
+        userId: z.coerce.number().int().positive(),
+        statusInvitation: z.enum(["PENDING", "ACCEPTED", "DECLINED"]).optional()
+      })
+    )
     .optional()
 })
 
 type SessionFormValues = z.infer<typeof sessionSchema>
-
-const steps = [
-  { id: 1, title: "Quoi & Quand ?" },
-  { id: 2, title: "Où ?" },
-  { id: 3, title: "Les Jeux" },
-  { id: 4, title: "Confirmation" }
-]
 
 export const SessionFormPage = () => {
   const { id } = useParams<{ id?: string }>()
@@ -40,12 +44,16 @@ export const SessionFormPage = () => {
   const sessionId = isEditing ? Number(id) : undefined
   const queryClient = useQueryClient()
   const navigate = useNavigate()
-  const [currentStep, setCurrentStep] = useState(1)
-  const [direction, setDirection] = useState(0)
+  const { t, i18n } = useTranslation()
 
   const { data: games } = useQuery({
     queryKey: queryKeys.games,
     queryFn: listGames
+  })
+
+  const { data: users } = useQuery({
+    queryKey: ['users'],
+    queryFn: fetchUsers
   })
 
   const { data: sessionData } = useQuery({
@@ -59,21 +67,28 @@ export const SessionFormPage = () => {
     control,
     handleSubmit,
     watch,
-    trigger,
+    setValue,
     formState: { errors },
     reset
   } = useForm<SessionFormValues>({
     resolver: zodResolver(sessionSchema),
     defaultValues: {
       title: "",
-      location: "",
-      startDatetime: new Date().toISOString().slice(0, 16),
-      games: []
+      location: t('planner.defaultLocation'),
+      date: new Date().toISOString().slice(0, 10),
+      time: "19:00",
+      games: [],
+      participants: []
     }
   })
 
-  const { fields, append, remove, replace } = useFieldArray({
+  const { fields: gameFields, append: appendGame, remove: removeGame, replace: replaceGames } = useFieldArray({
     name: "games",
+    control
+  })
+
+  const { fields: participantFields, append: appendParticipant, remove: removeParticipant, replace: replaceParticipants } = useFieldArray({
+    name: "participants",
     control
   })
 
@@ -82,26 +97,37 @@ export const SessionFormPage = () => {
   useEffect(() => {
     if (!isEditing || !sessionData) return
 
+    const dt = new Date(sessionData.startDatetime)
+    const d = dt.toISOString().slice(0, 10)
+    const t = dt.toTimeString().slice(0, 5)
+
     const values: SessionFormValues = {
       title: sessionData.title,
       location: sessionData.location,
-      startDatetime: sessionData.startDatetime.slice(0, 16),
+      date: d,
+      time: t,
       games: sessionData.games?.map((sessionGame) => ({
         gameId: sessionGame.gameId,
         order: sessionGame.order
+      })) ?? [],
+      participants: sessionData.participants?.map((p: any) => ({
+        userId: p.userId,
+        statusInvitation: p.statusInvitation
       })) ?? []
     }
     reset(values)
-    replace(values.games ?? [])
-  }, [isEditing, sessionData, reset, replace])
+    replaceGames(values.games ?? [])
+    replaceParticipants(values.participants ?? [])
+  }, [isEditing, sessionData, reset, replaceGames, replaceParticipants])
 
   const createMutation = useMutation({
     mutationFn: createSession,
     onSuccess: async (session) => {
       confetti({
-        particleCount: 100,
-        spread: 70,
-        origin: { y: 0.6 }
+        particleCount: 150,
+        spread: 80,
+        origin: { y: 0.6 },
+        colors: ["#9A3026", "#A07823", "#2C1810"]
       })
       await queryClient.invalidateQueries({ queryKey: queryKeys.sessions })
       setTimeout(() => navigate(`/sessions/${session.id}`), 1500)
@@ -109,7 +135,7 @@ export const SessionFormPage = () => {
   })
 
   const updateMutation = useMutation({
-    mutationFn: (values: SessionFormValues) => updateSession(sessionId!, values),
+    mutationFn: (values: any) => updateSession(sessionId!, values),
     onSuccess: async (session) => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: queryKeys.sessions }),
@@ -119,31 +145,20 @@ export const SessionFormPage = () => {
     }
   })
 
-  const nextStep = async () => {
-    let isValid = false
-    if (currentStep === 1) isValid = await trigger(["title", "startDatetime"])
-    if (currentStep === 2) isValid = await trigger("location")
-    if (currentStep === 3) isValid = true // Games are optional
-
-    if (isValid) {
-      setDirection(1)
-      setCurrentStep((prev) => Math.min(prev + 1, steps.length))
-    }
-  }
-
-  const prevStep = () => {
-    setDirection(-1)
-    setCurrentStep((prev) => Math.max(prev - 1, 1))
-  }
-
   const onSubmit = handleSubmit(async (values) => {
+    const startDatetime = new Date(`${values.date}T${values.time}:00`).toISOString()
+    
     const payload = {
-      title: values.title!,
-      location: values.location!,
-      startDatetime: values.startDatetime!,
+      title: values.title || t('planner.sessionTitle', { date: new Date(startDatetime).toLocaleDateString(i18n.language) }),
+      location: values.location || t('planner.toBeDefined'),
+      startDatetime: startDatetime,
       games: values.games?.map(g => ({
         gameId: Number(g.gameId),
         order: Number(g.order)
+      })) ?? [],
+      participants: values.participants?.map(p => ({
+        userId: Number(p.userId),
+        statusInvitation: (p.statusInvitation || "PENDING") as "PENDING" | "ACCEPTED" | "DECLINED"
       })) ?? []
     }
 
@@ -154,152 +169,195 @@ export const SessionFormPage = () => {
     }
   })
 
-  const variants = {
-    enter: (direction: number) => ({
-      x: direction > 0 ? 50 : -50,
-      opacity: 0
-    }),
-    center: {
-      x: 0,
-      opacity: 1
-    },
-    exit: (direction: number) => ({
-      x: direction < 0 ? 50 : -50,
-      opacity: 0
-    })
+  const toggleGameSelection = (gameId: number) => {
+    const existingIndex = gameFields.findIndex(f => f.gameId === gameId)
+    if (existingIndex >= 0) {
+      removeGame(existingIndex)
+    } else {
+      appendGame({ gameId, order: gameFields.length + 1 })
+    }
   }
 
+  const toggleParticipantSelection = (userId: number) => {
+    const existingIndex = participantFields.findIndex(f => f.userId === userId)
+    if (existingIndex >= 0) {
+      removeParticipant(existingIndex)
+    } else {
+      appendParticipant({ userId, statusInvitation: "PENDING" })
+    }
+  }
+
+  // Fallbacks images mock data for rendering
+  const getGameCover = (game: any, idx: number) => {
+    if (game.imageUrl) return game.imageUrl
+    const covers = [
+      "https://images.unsplash.com/photo-1548232979-6c55de2cb734?auto=format&fit=crop&w=400&q=80",
+      "https://images.unsplash.com/photo-1610890716171-6b1bb98ffaed?auto=format&fit=crop&w=400&q=80",
+      "https://images.unsplash.com/photo-1629854499420-a61a6b0c6f50?auto=format&fit=crop&w=400&q=80"
+    ]
+    return covers[idx % covers.length]
+  }
+
+  const selectedGamesIds = gameFields.map(f => f.gameId)
+  const selectedGamesNames = games?.filter(g => selectedGamesIds.includes(g.id)).map(g => g.name).join(", ") || "-"
+  const selectedParticipantsIds = participantFields.map(f => f.userId)
+
   return (
-    <div className={styles.wizardContainer}>
-      <div className={styles.progress}>
-        {steps.map((step) => (
-          <div
-            key={step.id}
-            className={`${styles.stepIndicator} ${step.id === currentStep ? styles.active : step.id < currentStep ? styles.completed : ""
-              }`}
-          >
-            {step.id < currentStep ? "✓" : step.id}
-          </div>
-        ))}
+    <div className={styles.plannerContainer}>
+      <div className={styles.header}>
+        <h1>{t('planner.title')}</h1>
+        <p>{t('planner.subtitle')}</p>
       </div>
 
-      <form onSubmit={onSubmit}>
-        <div className={styles.stepContent}>
-          <AnimatePresence mode="wait" custom={direction}>
-            <motion.div
-              key={currentStep}
-              custom={direction}
-              variants={variants}
-              initial="enter"
-              animate="center"
-              exit="exit"
-              transition={{ duration: 0.2 }}
-              style={{ width: "100%", flex: 1 }}
-            >
-              <h2 className={styles.stepTitle}>{steps[currentStep - 1].title}</h2>
+      <form onSubmit={onSubmit} className={styles.grid}>
+        
+        {/* Left Column : When? */}
+        <div className={styles.section} style={{ gridColumn: '1' }}>
+          <div className={styles.sectionTitle}>
+            <div className={styles.stepNumber}>1</div>
+            <h2>{t('planner.step1')}</h2>
+          </div>
 
-              {currentStep === 1 && (
-                <div className={styles.formGroup}>
-                  <div className={styles.field}>
-                    <label>Titre de la session</label>
-                    <input {...register("title")} placeholder="Ex: Soirée Catan" autoFocus />
-                    {errors.title && <span style={{ color: "#C0392B" }}>{errors.title.message}</span>}
-                  </div>
-                  <div className={styles.field}>
-                    <label>Quand ?</label>
-                    <input type="datetime-local" {...register("startDatetime")} />
-                    {errors.startDatetime && <span style={{ color: "#C0392B" }}>{errors.startDatetime.message}</span>}
-                  </div>
-                </div>
-              )}
+          <label className={styles.fieldTitle}>{t('planner.selectDate')}</label>
+          <input 
+            type="date" 
+            className={styles.inputBox}
+            {...register("date")} 
+          />
+          {errors.date && <p style={{ color:'red' }}>{t(errors.date.message as string)}</p>}
+          {errors.time && <p style={{ color:'red' }}>{t(errors.time.message as string)}</p>}
 
-              {currentStep === 2 && (
-                <div className={styles.formGroup}>
-                  <div className={styles.field}>
-                    <label>Où ?</label>
-                    <input {...register("location")} placeholder="Ex: Chez Thomas" autoFocus />
-                    {errors.location && <span style={{ color: "#C0392B" }}>{errors.location.message}</span>}
-                  </div>
-                </div>
-              )}
-
-              {currentStep === 3 && (
-                <div className={styles.formGroup}>
-                  <div className={styles.gamesList}>
-                    {fields.map((field, index) => (
-                      <div key={field.id} className={styles.gameItem}>
-                        <span style={{ fontWeight: "bold", color: "#7F8C8D" }}>#{index + 1}</span>
-                        <select {...register(`games.${index}.gameId` as const, { valueAsNumber: true })}>
-                          <option value="">Sélectionner un jeu</option>
-                          {games?.map((game) => (
-                            <option key={game.id} value={game.id}>
-                              {game.name}
-                            </option>
-                          ))}
-                        </select>
-                        <button type="button" className="btn secondary" onClick={() => remove(index)} style={{ padding: "0.4rem 0.8rem" }}>
-                          ✕
-                        </button>
-                        <input type="hidden" {...register(`games.${index}.order` as const, { valueAsNumber: true })} value={index + 1} />
-                      </div>
-                    ))}
-                  </div>
-                  <button
-                    type="button"
-                    className="btn"
-                    onClick={() => append({ gameId: 0, order: fields.length + 1 })}
-                    style={{ alignSelf: "flex-start", marginTop: "1rem" }}
-                  >
-                    + Ajouter un jeu
-                  </button>
-                </div>
-              )}
-
-              {currentStep === 4 && (
-                <div className={styles.summary}>
-                  <div className={styles.summaryItem}>
-                    <span>Titre</span>
-                    <span>{formValues.title}</span>
-                  </div>
-                  <div className={styles.summaryItem}>
-                    <span>Date</span>
-                    <span>{new Date(formValues.startDatetime).toLocaleString()}</span>
-                  </div>
-                  <div className={styles.summaryItem}>
-                    <span>Lieu</span>
-                    <span>{formValues.location}</span>
-                  </div>
-                  <div className={styles.summaryItem}>
-                    <span>Jeux</span>
-                    <span>{fields.length} jeu(x) prévu(s)</span>
-                  </div>
-                </div>
-              )}
-            </motion.div>
-          </AnimatePresence>
-
-          <div className={styles.actions}>
-            {currentStep > 1 ? (
-              <button type="button" className="btn secondary" onClick={prevStep}>
-                Précédent
-              </button>
-            ) : (
-              <div></div>
-            )}
-
-            {currentStep < steps.length ? (
-              <button type="button" className="btn" onClick={nextStep}>
-                Suivant
-              </button>
-            ) : (
-              <button type="submit" className="btn accent" disabled={createMutation.isPending || updateMutation.isPending}>
-                {isEditing ? "Mettre à jour" : "Lancer les dés !"}
-              </button>
-            )}
+          <label className={styles.fieldTitle}>{t('planner.startTime')}</label>
+          <div className={styles.timeToggle}>
+            <label>
+              <input 
+                type="radio" 
+                value="19:00" 
+                {...register("time")}
+              />
+              19:00
+            </label>
+            <label>
+              <input 
+                type="radio" 
+                value="20:30" 
+                {...register("time")}
+              />
+              20:30
+            </label>
+          </div>
+          
+          <div className={styles.quoteBox}>
+            {t('planner.quote')}
           </div>
         </div>
+
+        {/* Right Column : Game Board Poll */}
+        <div className={styles.section} style={{ gridColumn: '2' }}>
+          <div className={styles.sectionTitle}>
+            <div className={styles.stepNumber}>2</div>
+            <h2>{t('planner.step2')}</h2>
+            <div className={styles.badge}>{t('planner.multipleChoice')}</div>
+          </div>
+
+          <div className={styles.gamesGrid}>
+            {games?.map((game, idx) => {
+              const isSelected = selectedGamesIds.includes(game.id)
+              return (
+                <div 
+                  key={game.id} 
+                  className={`${styles.gameCard} ${isSelected ? styles.selected : ''}`}
+                  onClick={() => toggleGameSelection(game.id)}
+                >
+                  <div className={styles.checkBadge}>✓</div>
+                  <img src={getGameCover(game, idx)} alt={game.name} className={styles.cover} />
+                  <div className={styles.content}>
+                    <h3>{game.name}</h3>
+                    <p>{game.minPlayers}-{game.maxPlayers} {t('planner.players')} • {game.averageDuration || 60} {t('planner.min')}</p>
+                  </div>
+                  <span className={styles.voteBtn}>
+                    {isSelected ? t('planner.voted') : t('planner.vote')}
+                  </span>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* Bottom Section : Guests & Summary */}
+        <div className={`${styles.bottomSection} ${styles.section}`}>
+          
+          <div className={styles.guestContainer}>
+            <div className={styles.sectionTitle}>
+              <div className={styles.stepNumber}>3</div>
+              <h2>{t('planner.step3')}</h2>
+            </div>
+
+            <div className={styles.guestList}>
+              {users?.map(user => {
+                const isInvited = selectedParticipantsIds.includes(user.id)
+                // Default API avatar for real user
+                const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName)}&background=random`
+                return (
+                  <div 
+                    key={user.id} 
+                    className={`${styles.guestItem} ${isInvited ? styles.selected : ''}`}
+                    onClick={() => toggleParticipantSelection(user.id)}
+                    style={{
+                      cursor: 'pointer',
+                      border: isInvited ? '2px solid var(--accent)' : '1px solid var(--card-border)',
+                      opacity: isInvited ? 1 : 0.6
+                    }}
+                  >
+                    <img src={avatarUrl} alt={user.displayName} />
+                    {user.displayName}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+
+          <div className={styles.summaryPanel}>
+             <div className={styles.iconBadge}>💬</div>
+             <h3>{t('planner.summary')}</h3>
+             
+             <div className={styles.summaryItem}>
+               <div className={styles.icon}>📅</div>
+               <div className={styles.details}>
+                 <span className={styles.label}>{t('planner.dateTime')}</span>
+                 <span className={styles.value}>
+                  {new Date(formValues.date).toLocaleDateString(i18n.language, { day: 'numeric', month: 'short', year: 'numeric' })} • {formValues.time}
+                 </span>
+               </div>
+             </div>
+
+             <div className={styles.summaryItem}>
+               <div className={styles.icon}>🎲</div>
+               <div className={styles.details}>
+                 <span className={styles.label}>{t('planner.proposedGames')}</span>
+                 <span className={styles.value}>{selectedGamesNames}</span>
+               </div>
+             </div>
+
+             <div className={styles.summaryItem}>
+               <div className={styles.icon}>👥</div>
+               <div className={styles.details}>
+                 <span className={styles.label}>{t('planner.players')}</span>
+                 <span className={styles.value}>{participantFields.length} {t('planner.invited')}</span>
+               </div>
+             </div>
+
+             <button type="submit" className={styles.submitBtn} disabled={createMutation.isPending || updateMutation.isPending}>
+                {createMutation.isPending ? t('planner.creatingBtn') : t('planner.createBtn')}
+             </button>
+             <div style={{ textAlign: "center", fontSize: "0.75rem", color: "var(--teal)", marginTop: "1rem", letterSpacing: "1px" }}>
+               {t('planner.invitesSent')}
+             </div>
+          </div>
+
+        </div>
+
       </form>
     </div>
   )
 }
-

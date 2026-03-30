@@ -12,7 +12,9 @@ router.get('/thing', GameController.thing)
 router.use(authenticate)
 
 router.get('/', GameController.listLocal)
+router.get('/:id', GameController.getById)
 router.post('/', GameController.save)
+router.delete('/:id', GameController.delete)
 router.post('/:id/image', GameController.upload.single('image'), GameController.uploadImage)
 
 export default router

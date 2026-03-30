@@ -7,6 +7,8 @@ import { DashboardPage } from '../pages/DashboardPage'
 import { SessionDetailPage } from '../pages/SessionDetailPage'
 import { SessionFormPage } from '../pages/SessionFormPage'
 import { GameLibraryPage } from '../pages/GameLibraryPage'
+import { GameDetailPage } from '../pages/GameDetailPage'
+import { HistoryPage } from '../pages/HistoryPage'
 
 const AppRoutes = () => {
   return (
@@ -18,6 +20,8 @@ const AppRoutes = () => {
           <Route path="/sessions/:id" element={<SessionDetailPage />} />
           <Route path="/sessions/:id/edit" element={<SessionFormPage />} />
           <Route path="/games" element={<GameLibraryPage />} />
+          <Route path="/games/:id" element={<GameDetailPage />} />
+          <Route path="/history" element={<HistoryPage />} />
         </Route>
       </Route>
       <Route path="/login" element={<LoginPage />} />
